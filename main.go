@@ -20,7 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	newImg, err := pixelate(img, scale)
+	newImg, err := Pixelate(img, scale)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +50,9 @@ func saveImage(img image.Image, path string) {
 	jpeg.Encode(file, img, nil)
 }
 
-func pixelate(img image.Image, scale int) (image.Image, error) {
+// Pixelate returns a new image, where each (scale x scale) region is the
+// average color of the same region in img.
+func Pixelate(img image.Image, scale int) (image.Image, error) {
 	width := img.Bounds().Size().X
 	height := img.Bounds().Size().Y
 	newImg := image.NewRGBA(image.Rect(0, 0, width, height))
@@ -62,10 +64,10 @@ func pixelate(img image.Image, scale int) (image.Image, error) {
 		scaleY := scale
 		for y := 0; y < height; y += scaleY {
 			scaleY = getScale(y, height, scaleY)
-			averageColor := computeAverageColor(img, x, y, scaleX, scaleY)
+			averageColor := ComputeAverageColor(img, x, y, scaleX, scaleY)
 
-			for i := x; i < x+scale; i++ {
-				for j := y; j < y+scale; j++ {
+			for i := x; i < x+scaleX; i++ {
+				for j := y; j < y+scaleY; j++ {
 					newImg.Set(i, j, averageColor)
 				}
 			}
@@ -83,10 +85,12 @@ func getScale(n, max, scale int) int {
 	}
 }
 
-func computeAverageColor(img image.Image, x, y, scaleX, scaleY int) color.Color {
+// ComputeAverageColor returns the average color in the rectangle (x, y, x+scaleX, y+scaleY).
+func ComputeAverageColor(img image.Image, x, y, scaleX, scaleY int) color.Color {
 	numColors := uint32(scaleX * scaleY)
 	var r, g, b, a uint32
 
+	// Get total of each color value
 	for i := x; i < x+scaleX; i++ {
 		for j := y; j < y+scaleY; j++ {
 			rI, gI, bI, aI := img.At(i, j).RGBA()
@@ -97,6 +101,7 @@ func computeAverageColor(img image.Image, x, y, scaleX, scaleY int) color.Color 
 		}
 	}
 
+	// Average out the color values
 	avgR := uint16(r / numColors)
 	avgG := uint16(g / numColors)
 	avgB := uint16(b / numColors)
