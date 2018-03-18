@@ -1,18 +1,18 @@
 package main
 
 import (
-	"image/color"
-	"strconv"
 	"image"
+	"image/color"
 	"image/jpeg"
-	"os"
 	"log"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 func main() {
-	path     :=  os.Args[1]
+	path := os.Args[1]
 	scale, _ := strconv.Atoi(os.Args[2])
 
 	img, err := getImage(path)
@@ -46,21 +46,21 @@ func getImage(path string) (image.Image, error) {
 
 func saveImage(img image.Image, path string) {
 	file, _ := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
-    defer file.Close()
-    jpeg.Encode(file, img, nil)
+	defer file.Close()
+	jpeg.Encode(file, img, nil)
 }
 
 func pixelate(img image.Image, scale int) (image.Image, error) {
 	width := img.Bounds().Size().X
-	height:= img.Bounds().Size().Y
+	height := img.Bounds().Size().Y
 	newImg := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	for x := 0 ; x < width; x += scale {
-		for y := 0 ; y < height; y += scale {
+	for x := 0; x < width; x += scale {
+		for y := 0; y < height; y += scale {
 			averageColor := computeAverageColor(img, x, y, scale)
 
-			for i := x ; i < x + scale; i++ {
-				for j := y ; j < y + scale; j++ {	
+			for i := x; i < x+scale; i++ {
+				for j := y; j < y+scale; j++ {
 					newImg.Set(i, j, averageColor)
 				}
 			}
@@ -72,10 +72,10 @@ func pixelate(img image.Image, scale int) (image.Image, error) {
 
 func computeAverageColor(img image.Image, x, y, scale int) color.Color {
 	numColors := uint32(scale * scale)
-    var r, g, b, a uint32
+	var r, g, b, a uint32
 
-	for i := x ; i < x + scale; i++ {
-		for j := y ; j < y + scale; j++ {
+	for i := x; i < x+scale; i++ {
+		for j := y; j < y+scale; j++ {
 			rI, gI, bI, aI := img.At(i, j).RGBA()
 			r += rI
 			g += gI
