@@ -55,9 +55,14 @@ func pixelate(img image.Image, scale int) (image.Image, error) {
 	height := img.Bounds().Size().Y
 	newImg := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	for x := 0; x < width; x += scale {
-		for y := 0; y < height; y += scale {
-			averageColor := computeAverageColor(img, x, y, scale)
+	scaleX := scale
+	for x := 0; x < width; x += scaleX {
+		scaleX = getScale(x, width, scaleX)
+
+		scaleY := scale
+		for y := 0; y < height; y += scaleY {
+			scaleY = getScale(y, height, scaleY)
+			averageColor := computeAverageColor(img, x, y, scaleX, scaleY)
 
 			for i := x; i < x+scale; i++ {
 				for j := y; j < y+scale; j++ {
@@ -70,12 +75,20 @@ func pixelate(img image.Image, scale int) (image.Image, error) {
 	return newImg, nil
 }
 
-func computeAverageColor(img image.Image, x, y, scale int) color.Color {
-	numColors := uint32(scale * scale)
+func getScale(n, max, scale int) int {
+	if n+scale > max {
+		return max - n
+	} else {
+		return scale
+	}
+}
+
+func computeAverageColor(img image.Image, x, y, scaleX, scaleY int) color.Color {
+	numColors := uint32(scaleX * scaleY)
 	var r, g, b, a uint32
 
-	for i := x; i < x+scale; i++ {
-		for j := y; j < y+scale; j++ {
+	for i := x; i < x+scaleX; i++ {
+		for j := y; j < y+scaleY; j++ {
 			rI, gI, bI, aI := img.At(i, j).RGBA()
 			r += rI
 			g += gI
